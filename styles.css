@@ -54,13 +54,23 @@ a { color: inherit; text-decoration: none; }
   height: 52px;
   object-fit: contain;
   border-radius: 16px;
-  background: rgba(255,255,255,0.06);
-  padding: 6px;
-  border: 1px solid var(--line);
+  background: transparent;
+  padding: 0;
+  border: 0;
+  filter: drop-shadow(0 0 10px rgba(57, 209, 255, 0.28));
 }
 
-.brand strong { display: block; font-size: 1.05rem; }
-.brand span { display: block; color: var(--muted); font-size: 0.86rem; }
+.brand-text strong {
+  display: block;
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+
+.brand-text span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
 
 .menu {
   display: flex;
@@ -181,16 +191,21 @@ a { color: inherit; text-decoration: none; }
   border-radius: 50%;
   background: rgba(255,255,255,0.22);
 }
+
 .panel-logo {
   display: block;
-  width: min(280px, 100%);
-  margin: 10px auto 24px;
+  width: min(320px, 100%);
+  margin: 14px auto 26px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(57, 209, 255, 0.18));
 }
+
 .panel-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
+
 .mini-card { padding: 18px; }
 .mini-card h3 { margin: 0 0 8px; font-size: 1rem; }
 .mini-card p { margin: 0; font-size: 0.94rem; color: var(--muted); line-height: 1.6; }
@@ -302,7 +317,11 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 640px) {
   .hero { padding-top: 36px; }
   .section { padding: 64px 0; }
-  .brand strong { font-size: 0.98rem; }
-  .brand span { font-size: 0.8rem; }
+  .brand-logo {
+    width: 46px;
+    height: 46px;
+  }
+  .brand-text strong { font-size: 0.98rem; }
+  .brand-text span { font-size: 0.8rem; }
   .btn { width: 100%; }
 }
