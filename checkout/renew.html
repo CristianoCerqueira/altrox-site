@@ -5,18 +5,114 @@
   <title>Redirecionando para pagamento...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    :root {
+      --bg: #06111f;
+      --card: #0c1b2e;
+      --text: #ffffff;
+      --muted: #b8c6d8;
+      --info: #39d1ff;
+      --error: #ff6b6b;
+      --success: #38d39f;
+      --line: rgba(255,255,255,0.12);
+    }
+
+    * { box-sizing: border-box; }
+
     body {
+      margin: 0;
+      min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: #06111f;
-      color: white;
+      background: var(--bg);
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      padding: 24px;
     }
+
     .box {
+      width: min(760px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 28px;
       text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 2rem;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .status {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      display: none;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.info {
+      background: rgba(57, 209, 255, 0.08);
+      border: 1px solid rgba(57, 209, 255, 0.25);
+      color: #bfefff;
+    }
+
+    .status.error {
+      background: rgba(255, 107, 107, 0.08);
+      border: 1px solid rgba(255, 107, 107, 0.25);
+      color: #ffd0d0;
+    }
+
+    .status.success {
+      background: rgba(56, 211, 159, 0.08);
+      border: 1px solid rgba(56, 211, 159, 0.25);
+      color: #c6ffe9;
+    }
+
+    .details {
+      margin-top: 18px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .retry {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .retry.show {
+      display: block;
+    }
+
+    button {
+      border: 0;
+      background: linear-gradient(135deg, #39d1ff, #11b8ea);
+      color: #03101d;
+      font-weight: 700;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    code {
+      background: rgba(255,255,255,0.06);
+      padding: 2px 6px;
+      border-radius: 6px;
     }
   </style>
 </head>
@@ -24,55 +120,126 @@
   <div class="box">
     <h2>Gerando seu pagamento...</h2>
     <p>Aguarde, você será redirecionado automaticamente.</p>
+
+    <div id="status" class="status info show">Iniciando renovação...</div>
+
+    <div class="details" id="details"></div>
+
+    <div class="retry" id="retryBox">
+      <button type="button" onclick="window.location.reload()">Tentar novamente</button>
+    </div>
   </div>
 
   <script>
-    const API_URL = "https://api.altroxpdv.com.br/api/checkout/renew";
+    (function () {
+      const API_URL = "https://api.altroxpdv.com.br/api/checkout/renew";
+      const statusEl = document.getElementById("status");
+      const detailsEl = document.getElementById("details");
+      const retryBox = document.getElementById("retryBox");
 
-    function getParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name);
-    }
-
-    async function start() {
-      const documento = getParam("documento");
-      const email = getParam("email");
-
-      if (!documento || !email) {
-        alert("Parâmetros inválidos.");
-        return;
+      function setStatus(message, type) {
+        statusEl.className = "status show " + (type || "info");
+        statusEl.textContent = message;
       }
 
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            documento: documento,
-            email: email,
-            origem: "site"
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Erro ao gerar pagamento.");
-        }
-
-        if (data.checkoutUrl) {
-          window.location.href = data.checkoutUrl;
-        } else {
-          alert("Não foi possível gerar o link de pagamento.");
-        }
-      } catch (err) {
-        alert(err.message);
+      function setDetails(message) {
+        detailsEl.textContent = message || "";
       }
-    }
 
-    start();
+      function onlyDigits(value) {
+        return (value || "").replace(/\D/g, "");
+      }
+
+      function getParam(name) {
+        const url = new URL(window.location.href);
+        return (url.searchParams.get(name) || "").trim();
+      }
+
+      async function safeReadResponse(response) {
+        const text = await response.text();
+
+        if (!text || !text.trim()) {
+          return { text: "", json: null };
+        }
+
+        try {
+          return {
+            text,
+            json: JSON.parse(text)
+          };
+        } catch {
+          return {
+            text,
+            json: null
+          };
+        }
+      }
+
+      async function start() {
+        const documento = onlyDigits(getParam("documento"));
+        const email = getParam("email");
+        const origem = getParam("origem") || "site";
+
+        if (!documento || !email) {
+          setStatus("Parâmetros inválidos para renovação.", "error");
+          setDetails("A URL precisa conter documento e email. Exemplo: ?documento=12345678900&email=cliente@exemplo.com");
+          retryBox.classList.add("show");
+          return;
+        }
+
+        setDetails("Documento: " + documento + " | E-mail: " + email);
+        setStatus("Consultando sua assinatura e gerando o checkout...", "info");
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              documento: documento,
+              email: email,
+              origem: origem,
+              successUrl: window.location.origin + "/?pagamento=sucesso",
+              pendingUrl: window.location.origin + "/?pagamento=pendente",
+              failureUrl: window.location.origin + "/?pagamento=falhou"
+            })
+          });
+
+          const result = await safeReadResponse(response);
+          const data = result.json;
+
+          if (!response.ok) {
+            const serverMessage =
+              (data && (data.message || data.detail || data.title)) ||
+              result.text ||
+              ("Erro HTTP " + response.status);
+
+            throw new Error(serverMessage);
+          }
+
+          if (!data) {
+            throw new Error("A API respondeu sem JSON. Verifique se o endpoint /api/checkout/renew já foi publicado no backend.");
+          }
+
+          if (data.checkoutUrl) {
+            setStatus("Pagamento gerado com sucesso. Redirecionando...", "success");
+            setDetails("Você será levado ao checkout em instantes.");
+            window.location.href = data.checkoutUrl;
+            return;
+          }
+
+          throw new Error(data.message || "A API não retornou checkoutUrl.");
+        } catch (error) {
+          setStatus("Não foi possível gerar o pagamento.", "error");
+          setDetails(error && error.message ? error.message : "Erro inesperado.");
+          retryBox.classList.add("show");
+        }
+      }
+
+      start();
+    })();
   </script>
 </body>
 </html>
