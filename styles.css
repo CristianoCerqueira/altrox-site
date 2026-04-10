@@ -167,7 +167,8 @@ a { color: inherit; text-decoration: none; }
 .benefit-item,
 .price-card,
 .faq-item,
-.mini-card {
+.mini-card,
+.download-card {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 24px;
@@ -225,25 +226,61 @@ a { color: inherit; text-decoration: none; }
 }
 .section-heading p { margin: 0; color: var(--muted); line-height: 1.75; }
 
+.downloads-section {
+  padding-top: 18px;
+}
+
 .cards-grid,
 .pricing-grid,
-.faq-grid {
+.faq-grid,
+.downloads-grid {
   display: grid;
   gap: 20px;
 }
 .cards-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .pricing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
 .faq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.downloads-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .feature-card,
 .faq-item,
-.price-card { padding: 26px; }
+.price-card,
+.download-card { padding: 26px; }
+
 .feature-card h3,
 .faq-item h3,
-.price-card h3 { margin: 0 0 10px; font-size: 1.18rem; }
+.price-card h3,
+.download-card h3 { margin: 0 0 10px; font-size: 1.18rem; }
+
 .feature-card p,
 .faq-item p,
-.price-card p { margin: 0; color: var(--muted); line-height: 1.75; }
+.price-card p,
+.download-card p { margin: 0; color: var(--muted); line-height: 1.75; }
+
+.download-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+}
+
+.download-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #03101d;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  box-shadow: 0 12px 30px rgba(57, 209, 255, 0.24);
+}
+
+.featured-download {
+  background: linear-gradient(180deg, rgba(57,209,255,0.16), rgba(255,255,255,0.06));
+  border-color: rgba(57, 209, 255, 0.35);
+}
 
 .split-grid {
   display: grid;
@@ -329,7 +366,8 @@ a { color: inherit; text-decoration: none; }
   .pricing-grid,
   .contact-box,
   .faq-grid,
-  .cards-grid {
+  .cards-grid,
+  .downloads-grid {
     grid-template-columns: 1fr;
   }
   .panel-grid,
