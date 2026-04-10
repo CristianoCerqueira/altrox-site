@@ -180,7 +180,7 @@
         <div class="section-heading">
           <span class="section-tag">Planos</span>
           <h2>Escolha o plano ideal para sua operação</h2>
-          <p>Assine online com pagamento recorrente no Mercado Pago e comece com o plano que melhor atende sua loja.</p>
+          <p>Assine online com pagamento recorrente e ativação automática integrada ao Altrox PDV.</p>
         </div>
         <div class="pricing-grid">
           <article class="price-card">
@@ -194,7 +194,7 @@
               <li>Relatórios básicos</li>
             </ul>
             <div class="price-actions">
-              <a class="btn btn-primary btn-plan" href="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=629103f38d394f52a4a12f5ec04f9340" target="_blank" rel="noopener noreferrer">Assinar agora</a>
+              <button class="btn btn-primary btn-plan" type="button" data-plan-code="ESSENCIAL" data-plan-name="Essencial">Assinar agora</button>
             </div>
           </article>
 
@@ -211,7 +211,7 @@
               <li>Suporte comercial</li>
             </ul>
             <div class="price-actions">
-              <a class="btn btn-primary btn-plan" href="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=704b19556b994f929d73c52ef8d36ab1" target="_blank" rel="noopener noreferrer">Assinar agora</a>
+              <button class="btn btn-primary btn-plan" type="button" data-plan-code="PROFISSIONAL" data-plan-name="Profissional">Assinar agora</button>
             </div>
           </article>
 
@@ -226,7 +226,7 @@
               <li>Escalabilidade</li>
             </ul>
             <div class="price-actions">
-              <a class="btn btn-primary btn-plan" href="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=18e3f932b12d4b06bb60b2dcccf7f658" target="_blank" rel="noopener noreferrer">Assinar agora</a>
+              <button class="btn btn-primary btn-plan" type="button" data-plan-code="ENTERPRISE" data-plan-name="Enterprise">Assinar agora</button>
             </div>
           </article>
         </div>
@@ -289,5 +289,279 @@
       </div>
     </div>
   </footer>
+
+  <div class="checkout-modal" id="checkoutModal" aria-hidden="true">
+    <div class="checkout-modal__backdrop" data-close-modal></div>
+    <div class="checkout-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="checkoutModalTitle">
+      <button class="checkout-modal__close" type="button" data-close-modal aria-label="Fechar">×</button>
+
+      <div class="checkout-modal__header">
+        <span class="section-tag">Assinatura online</span>
+        <h2 id="checkoutModalTitle">Finalizar assinatura</h2>
+        <p>Preencha seus dados para gerar o link de pagamento e liberar sua assinatura automaticamente.</p>
+      </div>
+
+      <form id="checkoutForm" class="checkout-form">
+        <input type="hidden" id="planCode" name="planCode" />
+        <div class="checkout-selected-plan">
+          <span>Plano selecionado</span>
+          <strong id="selectedPlanName">-</strong>
+        </div>
+
+        <div class="checkout-grid">
+          <div class="form-group">
+            <label for="razaoSocial">Nome ou Razão Social</label>
+            <input type="text" id="razaoSocial" name="razaoSocial" placeholder="Digite o nome ou razão social" required />
+          </div>
+
+          <div class="form-group">
+            <label for="nomeFantasia">Nome Fantasia</label>
+            <input type="text" id="nomeFantasia" name="nomeFantasia" placeholder="Opcional" />
+          </div>
+
+          <div class="form-group">
+            <label for="documento">CPF ou CNPJ</label>
+            <input type="text" id="documento" name="documento" placeholder="Digite o CPF ou CNPJ" required />
+          </div>
+
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="Digite o e-mail" required />
+          </div>
+
+          <div class="form-group">
+            <label for="telefone">Telefone</label>
+            <input type="text" id="telefone" name="telefone" placeholder="Digite o telefone" required />
+          </div>
+        </div>
+
+        <div class="checkout-feedback" id="checkoutFeedback"></div>
+
+        <div class="checkout-actions">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="checkoutSubmitButton">Gerar link de pagamento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const API_BASE_URL = "https://api.altroxpdv.com.br/api/public/checkout";
+      const modal = document.getElementById("checkoutModal");
+      const form = document.getElementById("checkoutForm");
+      const planCodeInput = document.getElementById("planCode");
+      const selectedPlanName = document.getElementById("selectedPlanName");
+      const feedback = document.getElementById("checkoutFeedback");
+      const submitButton = document.getElementById("checkoutSubmitButton");
+      const planButtons = document.querySelectorAll("[data-plan-code]");
+
+      let availablePlans = [];
+
+      async function loadPlans() {
+        try {
+          const response = await fetch(API_BASE_URL + "/plans", {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+          });
+
+          if (!response.ok) {
+            throw new Error("Não foi possível carregar os planos da API.");
+          }
+
+          availablePlans = await response.json();
+        } catch (error) {
+          console.error(error);
+          availablePlans = [];
+        }
+      }
+
+      function normalizeText(value) {
+        return (value || "")
+          .toString()
+          .trim()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toUpperCase();
+      }
+
+      function findPlanByCode(planCode) {
+        const normalizedCode = normalizeText(planCode);
+        return availablePlans.find(function (plan) {
+          return normalizeText(plan.code) === normalizedCode;
+        });
+      }
+
+      function openModal(planCode, planName) {
+        planCodeInput.value = planCode;
+        selectedPlanName.textContent = planName;
+        feedback.className = "checkout-feedback";
+        feedback.textContent = "";
+        form.reset();
+        planCodeInput.value = planCode;
+        selectedPlanName.textContent = planName;
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+      }
+
+      function closeModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+        feedback.className = "checkout-feedback";
+        feedback.textContent = "";
+      }
+
+      function setFeedback(message, type) {
+        feedback.textContent = message;
+        feedback.className = "checkout-feedback is-visible" + (type ? " " + type : "");
+      }
+
+      function setLoading(isLoading) {
+        submitButton.disabled = isLoading;
+        submitButton.textContent = isLoading ? "Gerando pagamento..." : "Gerar link de pagamento";
+      }
+
+      function onlyDigits(value) {
+        return (value || "").replace(/\D/g, "");
+      }
+
+      function buildPayload(planId) {
+        return {
+          planId: planId,
+          razaoSocial: document.getElementById("razaoSocial").value.trim(),
+          nomeFantasia: document.getElementById("nomeFantasia").value.trim(),
+          documento: document.getElementById("documento").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          telefone: document.getElementById("telefone").value.trim(),
+          successUrl: window.location.origin + "/?pagamento=sucesso",
+          pendingUrl: window.location.origin + "/?pagamento=pendente",
+          failureUrl: window.location.origin + "/?pagamento=falhou"
+        };
+      }
+
+      planButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          openModal(button.dataset.planCode || "", button.dataset.planName || "Plano");
+        });
+      });
+
+      document.querySelectorAll("[data-close-modal]").forEach(function (element) {
+        element.addEventListener("click", closeModal);
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const selectedPlan = findPlanByCode(planCodeInput.value);
+        if (!selectedPlan || !selectedPlan.id) {
+          setFeedback("Não foi possível localizar o plano na API. Verifique se os códigos dos planos estão cadastrados corretamente.", "is-error");
+          return;
+        }
+
+        const documento = onlyDigits(document.getElementById("documento").value);
+        if (documento.length < 11) {
+          setFeedback("Informe um CPF ou CNPJ válido.", "is-error");
+          return;
+        }
+
+        if (!document.getElementById("razaoSocial").value.trim()) {
+          setFeedback("Informe o nome ou razão social.", "is-error");
+          return;
+        }
+
+        if (!document.getElementById("email").value.trim()) {
+          setFeedback("Informe o e-mail.", "is-error");
+          return;
+        }
+
+        if (!document.getElementById("telefone").value.trim()) {
+          setFeedback("Informe o telefone.", "is-error");
+          return;
+        }
+
+        setLoading(true);
+        setFeedback("Gerando seu link de pagamento...", "is-info");
+
+        try {
+          const response = await fetch(API_BASE_URL + "/subscription-link", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(buildPayload(selectedPlan.id))
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || "Não foi possível gerar o link de pagamento.");
+          }
+
+          if (data.alreadyActive) {
+            setFeedback(data.message || "Este cliente já possui uma assinatura ativa nesse plano.", "is-success");
+            return;
+          }
+
+          if (data.checkoutUrl) {
+            setFeedback("Redirecionando para o pagamento...", "is-success");
+            window.location.href = data.checkoutUrl;
+            return;
+          }
+
+          throw new Error(data.message || "A API não retornou um link de pagamento.");
+        } catch (error) {
+          setFeedback(error.message || "Erro ao gerar pagamento. Tente novamente.", "is-error");
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      document.getElementById("documento").addEventListener("input", function (event) {
+        let value = onlyDigits(event.target.value).slice(0, 14);
+
+        if (value.length <= 11) {
+          value = value
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        } else {
+          value = value
+            .replace(/^(\d{2})(\d)/, "$1.$2")
+            .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+            .replace(/\.(\d{3})(\d)/, ".$1/$2")
+            .replace(/(\d{4})(\d)/, "$1-$2");
+        }
+
+        event.target.value = value;
+      });
+
+      document.getElementById("telefone").addEventListener("input", function (event) {
+        let value = onlyDigits(event.target.value).slice(0, 11);
+
+        if (value.length <= 10) {
+          value = value
+            .replace(/^(\d{2})(\d)/g, "($1) $2")
+            .replace(/(\d{4})(\d)/, "$1-$2");
+        } else {
+          value = value
+            .replace(/^(\d{2})(\d)/g, "($1) $2")
+            .replace(/(\d{5})(\d)/, "$1-$2");
+        }
+
+        event.target.value = value;
+      });
+
+      loadPlans();
+    })();
+  </script>
 </body>
 </html>
