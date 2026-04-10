@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecionando para pagamento...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #06111f;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .box {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Gerando seu pagamento...</h2>
+    <p>Aguarde, você será redirecionado automaticamente.</p>
+  </div>
+
+  <script>
+    const API_URL = "https://api.altroxpdv.com.br/api/checkout/renew";
+
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    async function start() {
+      const documento = getParam("documento");
+      const email = getParam("email");
+
+      if (!documento || !email) {
+        alert("Parâmetros inválidos.");
+        return;
+      }
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            documento: documento,
+            email: email,
+            origem: "site"
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Erro ao gerar pagamento.");
+        }
+
+        if (data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+        } else {
+          alert("Não foi possível gerar o link de pagamento.");
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    start();
+  </script>
+</body>
+</html>
