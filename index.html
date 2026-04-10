@@ -357,6 +357,42 @@
       const submitButton = document.getElementById("checkoutSubmitButton");
       const planButtons = document.querySelectorAll("[data-plan-code]");
 
+      let availablePlans = [];
+
+      async function loadPlans() {
+        try {
+          const response = await fetch(API_BASE_URL + "/plans", {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+          });
+
+          if (!response.ok) {
+            throw new Error("Não foi possível carregar os planos da API.");
+          }
+
+          availablePlans = await response.json();
+        } catch (error) {
+          console.error(error);
+          availablePlans = [];
+        }
+      }
+
+      function normalizeText(value) {
+        return (value || "")
+          .toString()
+          .trim()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toUpperCase();
+      }
+
+      function findPlanByCode(planCode) {
+        const normalizedCode = normalizeText(planCode);
+        return availablePlans.find(function (plan) {
+          return normalizeText(plan.code) === normalizedCode;
+        });
+      }
+
       function openModal(planCode, planName) {
         form.reset();
         planCodeInput.value = planCode;
@@ -390,9 +426,9 @@
         return (value || "").replace(/\D/g, "");
       }
 
-      function buildPayload() {
+      function buildPayload(planId) {
         return {
-          planCode: planCodeInput.value,
+          planId: planId,
           razaoSocial: document.getElementById("razaoSocial").value.trim(),
           nomeFantasia: document.getElementById("nomeFantasia").value.trim(),
           documento: document.getElementById("documento").value.trim(),
@@ -423,8 +459,9 @@
       form.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        if (!planCodeInput.value) {
-          setFeedback("Não foi possível identificar o plano selecionado.", "is-error");
+        const selectedPlan = findPlanByCode(planCodeInput.value);
+        if (!selectedPlan || !selectedPlan.id) {
+          setFeedback("Não foi possível localizar o plano na API. Verifique se os códigos dos planos estão cadastrados corretamente.", "is-error");
           return;
         }
 
@@ -459,7 +496,7 @@
               "Content-Type": "application/json",
               "Accept": "application/json"
             },
-            body: JSON.stringify(buildPayload())
+            body: JSON.stringify(buildPayload(selectedPlan.id))
           });
 
           const data = await response.json();
@@ -521,6 +558,8 @@
 
         event.target.value = value;
       });
+
+      loadPlans();
     })();
   </script>
 </body>
