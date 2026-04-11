@@ -694,15 +694,17 @@ button {
 /* ===== CORREÇÃO ALINHAMENTO ESQUERDA BOTÕES ===== */
 
 .hero-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 220px 220px;
   gap: 14px;
-  align-items: flex-start; /* garante alinhamento à esquerda */
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: start;
+  margin: 28px 0 30px;
 }
 
 .hero-actions .btn {
   height: 52px;
-  min-width: 220px; /* mesmo padrão visual */
+  min-width: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
