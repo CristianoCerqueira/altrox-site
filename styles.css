@@ -713,3 +713,9 @@ button {
   flex-direction: column;
   align-items: flex-start;
 }
+
+
+/* ===== AJUSTE FINO BOTÃO IA ===== */
+.btn-ia {
+  margin-left: 8px;
+}
