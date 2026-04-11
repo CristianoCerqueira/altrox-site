@@ -687,3 +687,24 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ===== CORREÇÃO BOTÕES HERO ===== */
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.hero-actions .btn {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* garante mesmo tamanho visual */
+.btn-secondary {
+  padding: 14px 22px;
+}
