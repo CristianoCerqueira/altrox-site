@@ -691,23 +691,25 @@ button {
 }
 
 
-/* ===== CORREÇÃO ALINHAMENTO ESQUERDA BOTÕES ===== */
+/* ===== CORREÇÃO ALINHAMENTO DOS BOTÕES COM OS CARDS ABAIXO ===== */
 
 .hero-actions {
   display: grid;
-  grid-template-columns: 220px 220px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   align-items: center;
-  justify-content: start;
   margin: 28px 0 30px;
+  width: 100%;
 }
 
 .hero-actions .btn {
+  width: 220px;
+  min-width: 0;
   height: 52px;
-  min-width: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: start;
 }
 
 /* garante que comece exatamente na mesma linha dos cards */
@@ -715,4 +717,16 @@ button {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+
+@media (max-width: 640px) {
+  .hero-actions {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
 }
