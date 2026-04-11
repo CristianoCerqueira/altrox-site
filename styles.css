@@ -662,3 +662,28 @@ button {
     padding: 24px;
   }
 }
+
+
+/* ===== AJUSTE DE ALINHAMENTO DOS CARDS DA HERO ===== */
+
+.hero-points {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.point-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 70px;
+}
+
+/* RESPONSIVO */
+@media (max-width: 640px) {
+  .hero-points {
+    grid-template-columns: 1fr;
+  }
+}
