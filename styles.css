@@ -133,8 +133,7 @@ button {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 36px;
-  align-items: flex-start;
-  padding-left: 10px;
+  align-items: center;
 }
 
 .badge,
@@ -687,29 +686,4 @@ button {
   .hero-points {
     grid-template-columns: 1fr;
   }
-}
-
-
-/* ===== CORREÇÃO ALINHAMENTO ESQUERDA BOTÕES ===== */
-
-.hero-actions {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start; /* garante alinhamento à esquerda */
-  justify-content: flex-start;
-}
-
-.hero-actions .btn {
-  height: 52px;
-  min-width: 220px; /* mesmo padrão visual */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* garante que comece exatamente na mesma linha dos cards */
-.hero-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
 }
