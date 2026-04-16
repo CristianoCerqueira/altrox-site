@@ -547,7 +547,7 @@
         }
 
         setLoading(true);
-        setFeedback("Gerando seu link de pagamento...", "is-info");
+        setFeedback("Gerando seu Pix...", "is-info");
 
         try {
           const response = await fetch(API_BASE_URL + "/subscription-pix", {
@@ -559,14 +559,45 @@
             body: JSON.stringify(buildPayload(selectedPlan.id))
           });
 
-          const data = await response.json();
+          const responseText = await response.text();
+          let data = null;
+
+          try {
+            data = responseText ? JSON.parse(responseText) : null;
+          } catch {
+            data = null;
+          }
 
           if (!response.ok) {
-            throw new Error(data.message || "Não foi possível gerar o link de pagamento.");
+            throw new Error(
+              (data && (data.detail || data.message || data.title)) ||
+              responseText ||
+              "Não foi possível gerar o Pix."
+            );
+          }
+
+          if (!data) {
+            throw new Error("A API respondeu sem JSON ao gerar o Pix.");
           }
 
           if (data.alreadyActive) {
             setFeedback(data.message || "Este cliente já possui uma assinatura ativa nesse plano.", "is-success");
+            return;
+          }
+
+          if (data.qrCodeBase64 || data.qrCode || data.ticketUrl) {
+            const expirationText = data.dateOfExpirationUtc
+              ? new Date(data.dateOfExpirationUtc).toLocaleString("pt-BR")
+              : "Não informado";
+
+            feedback.innerHTML = `
+              <div><strong>${data.message || "Pix gerado com sucesso."}</strong></div>
+              ${data.qrCodeBase64 ? `<div style="margin-top:16px;text-align:center;"><img src="data:image/png;base64,${data.qrCodeBase64}" alt="QR Code Pix" style="max-width:220px;width:100%;background:#fff;padding:10px;border-radius:12px;"></div>` : ""}
+              ${data.qrCode ? `<div style="margin-top:16px;"><label style="display:block;margin-bottom:8px;font-weight:600;">Pix copia e cola</label><textarea readonly style="width:100%;min-height:120px;border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#fff;">${data.qrCode}</textarea></div>` : ""}
+              ${data.ticketUrl ? `<div style="margin-top:16px;"><a href="${data.ticketUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="width:100%;">Abrir cobrança no Mercado Pago</a></div>` : ""}
+              <div style="margin-top:12px;">Vencimento: ${expirationText}</div>
+            `;
+            feedback.className = "checkout-feedback is-visible is-success";
             return;
           }
 
@@ -576,7 +607,11 @@
             return;
           }
 
-          throw new Error(data.message || "A API não retornou um link de pagamento.");
+          throw new Error(
+            data.detail ||
+            data.message ||
+            "A API não retornou os dados do Pix."
+          );
         } catch (error) {
           setFeedback(error.message || "Erro ao gerar pagamento. Tente novamente.", "is-error");
         } finally {
