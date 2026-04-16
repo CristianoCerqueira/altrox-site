@@ -443,8 +443,13 @@
 
       function findPlanByCode(planCode) {
         const normalizedCode = normalizeText(planCode);
+
         return availablePlans.find(function (plan) {
-          return normalizeText(plan.code) === normalizedCode;
+          return (
+            normalizeText(plan.code) === normalizedCode ||
+            normalizeText(plan.name) === normalizedCode ||
+            normalizeText(plan.title) === normalizedCode
+          );
         });
       }
 
@@ -562,26 +567,6 @@
 
           if (data.alreadyActive) {
             setFeedback(data.message || "Este cliente já possui uma assinatura ativa nesse plano.", "is-success");
-            return;
-          }
-
-          
-          if (data.qrCodeBase64) {
-            setFeedback("Escaneie o QR Code para pagar via Pix:", "is-success");
-
-            const qrImg = document.createElement("img");
-            qrImg.src = "data:image/png;base64," + data.qrCodeBase64;
-            qrImg.style.width = "220px";
-            qrImg.style.marginTop = "15px";
-
-            const copia = document.createElement("textarea");
-            copia.value = data.qrCode;
-            copia.readOnly = true;
-            copia.style.width = "100%";
-            copia.style.marginTop = "10px";
-
-            feedback.appendChild(qrImg);
-            feedback.appendChild(copia);
             return;
           }
 
