@@ -310,14 +310,14 @@
             <div class="download-icon">01</div>
             <h3>Instalador oficial</h3>
             <p>Faça o download do instalador completo do Altrox PDV para novas instalações.</p>
-            <a class="btn btn-primary btn-plan" href="http://75.119.131.13:5019/download/latest" target="_blank" rel="noopener noreferrer" download>Baixar instalador</a>
+            <a class="btn btn-primary btn-plan" href="https://api.altroxpdv.com.br/download/latest" target="_blank" rel="noopener noreferrer" download>Baixar instalador</a>
           </article>
 
           <article class="download-card">
             <div class="download-icon">02</div>
             <h3>Atualização do sistema</h3>
             <p>Solicite a atualização mais recente para manter seu ambiente pronto para as melhorias.</p>
-            <a class="btn btn-secondary btn-plan" href="http://75.119.131.13:5019/download/latest" target="_blank" rel="noopener noreferrer" download>Baixar atualização</a>
+            <a class="btn btn-secondary btn-plan" href="https://api.altroxpdv.com.br/download/latest" target="_blank" rel="noopener noreferrer" download>Baixar atualização</a>
           </article>
 
           <article class="download-card">
@@ -752,6 +752,14 @@
         }
 
         event.target.value = value;
+      });
+
+      const DOWNLOAD_LATEST_URL = "https://api.altroxpdv.com.br/download/latest";
+
+      document.querySelectorAll('a[href="https://api.altroxpdv.com.br/download/latest"]').forEach(function (button) {
+        button.addEventListener("click", function (event) {
+          event.stopPropagation();
+        });
       });
 
       loadPlans();
